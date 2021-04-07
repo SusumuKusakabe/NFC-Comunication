@@ -124,6 +124,44 @@ class MainActivity : AppCompatActivity() {
 
             when (binding.radioGroup.checkedRadioButtonId) {
                 R.id.radioRequestResponse -> {
+                    val serviceList = byteArrayOf(0x0f, 0x09)
+
+
+                    // read command
+                    val readPayload = ByteArray(16)
+                    readPayload[0] = 16    // 配列長
+                    readPayload[1] = 0x06  // read コマンドコード
+
+                    // set IDm
+                    System.arraycopy(idm, 0, readPayload, 2, 8)
+
+                    readPayload[10] = 0x01 // サービスリストの長さ
+                    readPayload[11] = serviceList[0]
+                    readPayload[12] = serviceList[1]
+                    readPayload[13] = 0x01 // ブロック数
+                    readPayload[14] = 0x80.toByte() // ブロックリスト
+                    readPayload[15] = 0x00.toByte() // ブロックリスト
+
+
+
+                    val writePayload = ByteArray(32)
+                    writePayload[0] = 32    // 配列長
+                    writePayload[1] = 0x08  // write コマンドコード
+
+                    // set IDm
+                    System.arraycopy(idm, 0, writePayload, 2, 8)
+
+                    writePayload[10] = 0x01 // サービスリストの長さ
+                    writePayload[11] = serviceList[0]
+                    writePayload[12] = serviceList[1]
+                    writePayload[13] = 0x01 // ブロック数
+                    writePayload[14] = 0x80.toByte() // ブロックリスト
+                    writePayload[15] = 0x00.toByte() // ブロックリスト
+                    for (i in 0 until 16) {
+                        writePayload[16 + i] = i.toByte()
+                    }
+
+
                     // RequestResponseコマンドを送る
                     val payload: ByteArray = ByteArray(10)
                     payload[0] = 10    // 配列長
@@ -132,13 +170,17 @@ class MainActivity : AppCompatActivity() {
                     // set IDm
                     System.arraycopy(idm, 0, payload, 2, 8)
 
+
+
+
+
                     sb.apply {
-                        appendLine("send : ${payload.dump()}")
+                        appendLine("send : ${writePayload.dump()}")
                         appendLine()
                     }
 
                     val responseText = try {
-                        val response: ByteArray = it.transceive(payload)
+                        val response: ByteArray = it.transceive(writePayload)
                         response.dump()
                     } catch (e: TagLostException) {
                         e.printStackTrace()

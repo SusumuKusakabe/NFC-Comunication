@@ -76,6 +76,82 @@ class MyHostNfcFService : HostNfcFService() {
 
                 return payload
             }
+            0x06.toByte() -> {
+                if (commandPacket.size < 10) {
+                    return ByteArray(0)
+                }
+
+                val receivedIdm = ByteArray(8)
+                System.arraycopy(commandPacket, 2, receivedIdm, 0, 8)
+
+                if (!receivedIdm.contentEquals(idm)) {
+                    return ByteArray(0)
+                }
+
+                val payload = ByteArray(29).also {
+                    it[0] = 29    // 配列長
+                    it[1] = 0x07  // コマンドコード
+
+                    // set IDm
+                    System.arraycopy(idm, 0, it, 2, 8)
+
+                    it[10] = 0x00 // Status Flag
+                    it[11] = 0x00 // Status Flag
+                    it[12] = 0x01 // ブロック数
+                    for (i in 0 until 16) {
+                        it[13 + i] = i.toByte()
+                    }
+                }
+
+                sb.appendLine("send: ${payload.dump()}")
+
+                LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(
+                        Intent(this, MainActivity::class.java)
+                            .setAction(ACTION_LOG)
+                            .putExtra("log", sb.toString())
+                    )
+
+                println(sb.toString())
+
+                return payload
+            }
+            0x08.toByte() -> {
+                if (commandPacket.size < 10) {
+                    return ByteArray(0)
+                }
+
+                val receivedIdm = ByteArray(8)
+                System.arraycopy(commandPacket, 2, receivedIdm, 0, 8)
+
+                if (!receivedIdm.contentEquals(idm)) {
+                    return ByteArray(0)
+                }
+
+                val payload = ByteArray(12).also {
+                    it[0] = 12    // 配列長
+                    it[1] = 0x09  // コマンドコード
+
+                    // set IDm
+                    System.arraycopy(idm, 0, it, 2, 8)
+
+                    it[10] = 0x00 // Status Flag
+                    it[11] = 0x00 // Status Flag
+                }
+
+                sb.appendLine("send: ${payload.dump()}")
+
+                LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(
+                        Intent(this, MainActivity::class.java)
+                            .setAction(ACTION_LOG)
+                            .putExtra("log", sb.toString())
+                    )
+
+                println(sb.toString())
+
+                return payload
+            }
         }
 
         return ByteArray(0)
