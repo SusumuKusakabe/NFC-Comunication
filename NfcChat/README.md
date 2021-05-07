@@ -25,7 +25,7 @@ Android Studio の Open an Existing Project で NfcChat ディレクトリを指
 
 # ビルド済みの APK からインストールする
 
-Android のブラウザで以下の apk にアクセスする
+Android のブラウザで以下の apk をダウンロードして開く
 
 * card : https://github.com/uPhyca/NfcCommunicationSample/blob/main/NfcChat/apks/card/release/card-release.apk
 * reader : https://github.com/uPhyca/NfcCommunicationSample/blob/main/NfcChat/apks/card/release/reader-release.apk
