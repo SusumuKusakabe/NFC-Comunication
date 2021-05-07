@@ -29,3 +29,5 @@ Android のブラウザで以下の apk をダウンロードして開く
 
 * card : https://github.com/uPhyca/NfcCommunicationSample/blob/main/NfcChat/apks/card/release/card-release.apk
 * reader : https://github.com/uPhyca/NfcCommunicationSample/blob/main/NfcChat/apks/card/release/reader-release.apk
+
+提供元不明のダイアログが出るが、インストールを進める
