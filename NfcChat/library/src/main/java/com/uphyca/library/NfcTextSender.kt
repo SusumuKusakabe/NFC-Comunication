@@ -1,10 +1,7 @@
 package com.uphyca.library
 
 import android.app.Activity
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.TagLostException
@@ -20,36 +17,16 @@ class NfcTextSender(context: Context) {
     val isEnabled: Boolean
         get() = nfcAdapter != null && nfcAdapter.isEnabled
 
-    fun enableForegroundDispatch(activity: Activity) {
-        val intent = Intent(activity, activity::class.java)
-        nfcAdapter?.enableForegroundDispatch(
-            activity,
-            PendingIntent.getActivity(activity, 0, intent, 0),
-            arrayOf(
-                IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED, "*/*"),
-                IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED),
-                IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)
-            ),
-            arrayOf<Array<String>?>(
-                null,
-                arrayOf(NfcF::class.java.name), // NfcF にのみ反応
-                null
-            )
-        )
+    fun enableForegroundDispatch(activity: Activity, callback: NfcAdapter.ReaderCallback) {
+        val flag = NfcAdapter.FLAG_READER_NFC_F or NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
+        nfcAdapter?.enableReaderMode(activity, callback, flag, null)
     }
 
     fun disableForegroundDispatch(activity: Activity) {
-        nfcAdapter?.disableForegroundDispatch(activity)
+        nfcAdapter?.disableReaderMode(activity)
     }
 
-    fun send(intent: Intent, data: ByteArray): NfcFResult {
-        if (intent.action != NfcAdapter.ACTION_TECH_DISCOVERED) {
-            return NfcFResult.NotNfcF
-        }
-
-        val tag: Tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-            ?: return NfcFResult.CannotGetTag
-
+    fun send(tag: Tag, data: ByteArray): NfcFResult {
         val nfcF: NfcF = NfcF.get(tag)
             ?: return NfcFResult.CannotGetNfcFTag
 
@@ -73,6 +50,7 @@ class NfcTextSender(context: Context) {
             it.connect()
 
             val payload = createAnonymousCommand(idm, CustomRequestCommand, data)
+//            val payload = createRequestResponsePayload(idm)
 
             return try {
                 val response: ByteArray = it.transceive(payload)

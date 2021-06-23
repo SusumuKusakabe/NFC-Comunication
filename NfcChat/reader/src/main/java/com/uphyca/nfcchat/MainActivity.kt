@@ -1,7 +1,7 @@
 package com.uphyca.nfcchat
 
 import android.content.Intent
-import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -37,7 +37,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (nfcTextSender.isEnabled) {
-            nfcTextSender.enableForegroundDispatch(this)
+            nfcTextSender.enableForegroundDispatch(this) { tag ->
+                send(tag)
+            }
         } else {
             MaterialAlertDialogBuilder(this)
                 .setMessage("NFCを有効にしてください")
@@ -53,21 +55,11 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-
-        if (intent == null) {
-            return
-        }
-
-        if (intent.action != NfcAdapter.ACTION_TECH_DISCOVERED) {
-            return
-        }
-
+    private fun send(tag: Tag) {
         val text = binding.editText.text.toString()
         val textBytes = if (text.isEmpty()) ByteArray(0) else text.toByteArray()
 
-        when (val result = nfcTextSender.send(intent, textBytes)) {
+        when (val result = nfcTextSender.send(tag, textBytes)) {
             is NfcFResult.Success -> {
                 val responseText = String(result.response)
                 chatData.add(ChatData(isMe = true, text = text))
@@ -80,21 +72,27 @@ class MainActivity : AppCompatActivity() {
                 // no op
             }
             NfcFResult.CannotGetTag -> {
-                MaterialAlertDialogBuilder(this)
-                    .setMessage("tag を取得できませんでした")
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
+                runOnUiThread {
+                    MaterialAlertDialogBuilder(this)
+                        .setMessage("tag を取得できませんでした")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
                 return
             }
             NfcFResult.CannotGetNfcFTag -> {
-                MaterialAlertDialogBuilder(this)
-                    .setMessage("NfcF tag を取得できませんでした")
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
+                runOnUiThread {
+                    MaterialAlertDialogBuilder(this)
+                        .setMessage("NfcF tag を取得できませんでした")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
                 return
             }
             NfcFResult.TagLostException -> {
-                Toast.makeText(this, "TagLostException", Toast.LENGTH_SHORT).show()
+                runOnUiThread {
+                    Toast.makeText(this, "TagLostException", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
