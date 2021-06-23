@@ -78,7 +78,6 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton(android.R.string.ok, null)
                         .show()
                 }
-                return
             }
             NfcFResult.CannotGetNfcFTag -> {
                 runOnUiThread {
@@ -87,11 +86,18 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton(android.R.string.ok, null)
                         .show()
                 }
-                return
             }
             NfcFResult.TagLostException -> {
                 runOnUiThread {
                     Toast.makeText(this, "TagLostException", Toast.LENGTH_SHORT).show()
+                }
+            }
+            NfcFResult.CannotFindTargetIdm -> {
+                runOnUiThread {
+                    MaterialAlertDialogBuilder(this)
+                        .setMessage("目的の IDm が見つかりませんでした")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
                 }
             }
         }

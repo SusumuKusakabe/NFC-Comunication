@@ -10,6 +10,9 @@ import android.nfc.tech.NfcF
 const val CustomRequestCommand: Byte = 0x04
 const val CustomResponseCommand: Byte = 0x05
 
+private val targetIdm = byteArrayOf(0x02, 0xFE.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+private val targetSystemCode = byteArrayOf(0x40, 0x00)
+
 class NfcTextSender(context: Context) {
 
     val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(context)
@@ -49,22 +52,46 @@ class NfcTextSender(context: Context) {
         nfcF.use {
             it.connect()
 
-            val payload = createAnonymousCommand(idm, CustomRequestCommand, data)
-//            val payload = createRequestResponsePayload(idm)
+            if (!idm.contentEquals(targetIdm)) {
+                val payload = createSensfReqCommand(targetSystemCode)
+                try {
+                    val response: ByteArray = it.transceive(payload)
 
-            return try {
-                val response: ByteArray = it.transceive(payload)
+                    println("send : ${payload.dump()} success")
+                    println("response : ${response.dump()}")
 
-                println("send : ${payload.dump()} success")
-                println("response : ${response.dump()}")
+                    System.arraycopy(response, 2, idm, 0, 8)
 
-                NfcFResult.Success(extractData(response))
+                    if (!idm.contentEquals(targetIdm)) {
+                        return NfcFResult.CannotFindTargetIdm
+                    }
 
-            } catch (e: TagLostException) {
-                println("send : ${payload.dump()} fail")
-                e.printStackTrace()
-                NfcFResult.TagLostException
+                } catch (e: TagLostException) {
+                    println("send : ${payload.dump()} fail")
+                    e.printStackTrace()
+                    return NfcFResult.TagLostException
+                }
             }
+
+            return it.sendAnonymousCommand(idm, data)
+        }
+    }
+
+    private fun NfcF.sendAnonymousCommand(idm: ByteArray, data: ByteArray): NfcFResult {
+        val payload = createAnonymousCommand(idm, CustomRequestCommand, data)
+
+        return try {
+            val response: ByteArray = transceive(payload)
+
+            println("send : ${payload.dump()} success")
+            println("response : ${response.dump()}")
+
+            NfcFResult.Success(extractData(response))
+
+        } catch (e: TagLostException) {
+            println("send : ${payload.dump()} fail")
+            e.printStackTrace()
+            NfcFResult.TagLostException
         }
     }
 
@@ -81,6 +108,7 @@ sealed class NfcFResult {
     object CannotGetTag : NfcFResult()
     object CannotGetNfcFTag : NfcFResult()
     object TagLostException : NfcFResult()
+    object CannotFindTargetIdm : NfcFResult()
 }
 
 fun extractData(response: ByteArray): ByteArray {

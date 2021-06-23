@@ -3,5 +3,4 @@
     android:description="@string/service_desc">
     <system-code-filter android:name="4000" />
     <nfcid2-filter android:name="02FE000000000000" /> <!-- "random"でもよい -->
-    <t3tPmm-filter android:name="00F0000020600300" />
 </host-nfcf-service>

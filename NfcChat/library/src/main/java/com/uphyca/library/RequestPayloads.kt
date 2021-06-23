@@ -116,3 +116,20 @@ fun createAnonymousCommand(idm: ByteArray, command: Byte, data: ByteArray): Byte
 
     return payload
 }
+
+fun createSensfReqCommand(systemCode: ByteArray): ByteArray {
+    val length = 1 +   // 配列長
+        1 +             // コマンドコード
+        2 +             // systemCode
+        2
+
+    val payload = ByteArray(length)
+    payload[0] = length.toByte()
+    payload[1] = 0x00
+    payload[4] = 0x00
+    payload[5] = 0x00
+
+    System.arraycopy(systemCode, 0, payload, 2, 2)
+
+    return payload
+}
